@@ -12,8 +12,9 @@
 
 -type salsa20_ctx() :: reference().
 -type poly1305_ctx() :: reference().
+-export_type([salsa20_ctx/0, poly1305_ctx/0]).
 
--spec xsalsa20_init(Rounds :: pos_integer(), Key :: binary(), Nonce :: binary()) ->
+-spec xsalsa20_init(8|12|20, Key :: binary(), Nonce :: binary()) ->
 	  salsa20_ctx().
 xsalsa20_init(_Rounds, _Key, _Nonce) ->
     erlang:nif_error({nif_not_loaded, module, ?MODULE, line, ?LINE}).

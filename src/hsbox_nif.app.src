@@ -1,6 +1,6 @@
 {application, hsbox_nif,
- [{description, "An OTP library"},
-  {vsn, "0.1.0"},
+ [{description, "some hs crypton cbits"},
+  {vsn, git},
   {registered, []},
   {applications,
    [kernel,

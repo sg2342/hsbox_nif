@@ -5,19 +5,26 @@
 -export([init_per_suite/1, end_per_suite/1,
 	 init_per_testcase/2, end_per_testcase/2,
 	 all/0, suite/0,
-	 xsalsa20_kat/1, poly1305_kat/1]).
+	 xsalsa20_kat/1, poly1305_kat/1, sb/1]).
+
 
 suite() -> [{timetrap,{seconds,30}}].
 
+
 init_per_suite(Config) -> Config.
+
 
 end_per_suite(_Config) -> ok.
 
+
 init_per_testcase(_TestCase, Config) -> Config.
+
 
 end_per_testcase(_TestCase, _Config) -> ok.
 
-all() -> [xsalsa20_kat, poly1305_kat].
+
+all() -> [xsalsa20_kat, poly1305_kat, sb].
+
 
 xsalsa20_kat(_Config) ->
     Rounds = 20,
@@ -36,12 +43,13 @@ xsalsa20_kat(_Config) ->
 
     <<Iv0:8/binary, Iv1/binary>> = binary:decode_hex(N),
     Ctx = hsbox:xsalsa20_init(Rounds, binary:decode_hex(K),
-			      <<0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, Iv0/binary>>),
+			      <<0:128, Iv0/binary>>),
     ok = hsbox:xsalsa20_derive(Ctx, Iv1),
     _ = hsbox:xsalsa20_generate(Ctx, 32),
     true = (binary:decode_hex(CT) ==
 		hsbox:xsalsa20_combine(Ctx, binary:decode_hex(PT))),
     ok.
+
 
 poly1305_kat(_Config) ->
     Key = <<"85d6be7857556d337f4452fe42d506a80103808afb0db2fd4abff6af4149f51b">>,
@@ -51,4 +59,15 @@ poly1305_kat(_Config) ->
     Ctx = hsbox:poly1305_init(binary:decode_hex(Key)),
     ok = hsbox:poly1305_update(Ctx, Msg),
     true = (binary:decode_hex(Tag) == hsbox:poly1305_finalize(Ctx)),
+    ok.
+
+
+sb(_Config) ->
+    Key = crypto:strong_rand_bytes(32),
+    Nonce = crypto:strong_rand_bytes(24),
+    PT = crypto:strong_rand_bytes(1024),
+
+    CT = hsbox:sbEncrypt(Key, Nonce, PT),
+    {ok, PT} = hsbox:sbDecrypt(Key, Nonce, CT),
+    {error, auth_fail} = hsbox:sbDecrypt(Key, Nonce, <<0, CT/binary>>),
     ok.

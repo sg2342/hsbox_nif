@@ -135,6 +135,14 @@ int on_load(ErlNifEnv* env, void** priv, ERL_NIF_TERM info)
   return 0;
 }
 
+static int on_reload(ErlNifEnv* env, void** priv, ERL_NIF_TERM info) {
+  return 0;
+}
+
+static int on_upgrade(ErlNifEnv* env, void** priv, void **old, ERL_NIF_TERM info) {
+  return 0;
+}
+
 static ErlNifFunc nif_funcs[] = {
   {"xsalsa20_init", 3, xsalsa20_init_nif},
   {"xsalsa20_derive", 2, xsalsa20_derive_nif},
@@ -145,4 +153,4 @@ static ErlNifFunc nif_funcs[] = {
   {"poly1305_finalize", 1, poly1305_finalize_nif}
 };
 
-ERL_NIF_INIT(hsbox_nif, nif_funcs, &on_load, NULL, NULL, NULL)
+ERL_NIF_INIT(hsbox_nif, nif_funcs, &on_load, &on_reload, &on_upgrade, NULL)

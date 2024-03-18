@@ -6,6 +6,15 @@
 
 -export([sbEncrypt/3, sbDecrypt/3]).
 
+-type salsa20_ctx() :: hsbox_nif:salsa20_ctx().
+-type poly1305_ctx() :: hsbox_nif:poly1305_ctx().
+-type key() :: binary().
+-type nonce() :: binary().
+
+-export_type([salsa20_ctx/0, poly1305_ctx/0, key/0, nonce/0]).
+
+
+-spec xsalsa20_init(8|12|20, key(), nonce()) -> salsa20_ctx().
 xsalsa20_init(Rounds, Key, Nonce)
   when is_binary(Key), byte_size(Key) == 32,
        is_binary(Nonce), byte_size(Nonce) == 24,
@@ -13,32 +22,40 @@ xsalsa20_init(Rounds, Key, Nonce)
     hsbox_nif:xsalsa20_init(Rounds, Key, Nonce).
 
 
+-spec xsalsa20_derive(salsa20_ctx(), nonce()) -> ok.
 xsalsa20_derive(Ctx, Nonce)
   when is_reference(Ctx), is_binary(Nonce), byte_size(Nonce) == 16 ->
     hsbox_nif:xsalsa20_derive(Ctx, Nonce).
 
 
+-spec xsalsa20_combine(salsa20_ctx(), Src :: binary()) -> Dst :: binary().
 xsalsa20_combine(Ctx, Src) when is_reference(Ctx), is_binary(Src) ->
     hsbox_nif:xsalsa20_combine(Ctx, Src).
 
 
+-spec xsalsa20_generate(salsa20_ctx(), Bytes :: pos_integer()) -> binary().
 xsalsa20_generate(Ctx, Bytes)
   when is_reference(Ctx), is_integer(Bytes), Bytes > 0 ->
     hsbox_nif:xsalsa20_generate(Ctx, Bytes).
 
 
+-spec poly1305_init(key()) -> poly1305_ctx().
 poly1305_init(Key) when is_binary(Key), byte_size(Key) == 32 ->
     hsbox_nif:poly1305_init(Key).
 
 
+-spec poly1305_update(poly1305_ctx(), Data :: binary()) -> ok.
 poly1305_update(Ctx, Data) when is_reference(Ctx), is_binary(Data) ->
     hsbox_nif:poly1305_update(Ctx, Data).
 
 
+-spec poly1305_finalize(poly1305_ctx()) -> MAC :: binary().
 poly1305_finalize(Ctx) when is_reference(Ctx) ->
     hsbox_nif:poly1305_finalize(Ctx).
 
 
+-spec sbDecrypt(key(), nonce(), CT :: binary()) ->
+	  {ok, PT :: binary()} | {error, _}.
 sbDecrypt(Secret, Nonce, <<Tag:16/binary, CT/binary>>) ->
     {Rs, PT} = xsalsa20(Secret, Nonce, CT),
     case poly1305_auth(Rs, CT) of
@@ -47,6 +64,7 @@ sbDecrypt(Secret, Nonce, <<Tag:16/binary, CT/binary>>) ->
     end.
 
 
+-spec sbEncrypt(key(), nonce(), PT :: binary()) -> CT :: binary().
 sbEncrypt(Secret, Nonce, PT) ->
     {Rs, CT} = xsalsa20(Secret, Nonce, PT),
     Tag = poly1305_auth(Rs, CT),
