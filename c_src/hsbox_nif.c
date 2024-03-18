@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include "erl_nif.h"
 #include "crypton_xsalsa.h"
 #include "crypton_poly1305.h"
