@@ -14,12 +14,12 @@
 -type poly1305_ctx() :: reference().
 -export_type([salsa20_ctx/0, poly1305_ctx/0]).
 
--spec xsalsa20_init(8|12|20, Key :: binary(), Nonce :: binary()) ->
+-spec xsalsa20_init(8 | 12 | 20, Key :: <<_:256>>, Nonce :: <<_:192>>) ->
 	  salsa20_ctx().
 xsalsa20_init(_Rounds, _Key, _Nonce) ->
     erlang:nif_error({nif_not_loaded, module, ?MODULE, line, ?LINE}).
 
--spec xsalsa20_derive(salsa20_ctx(), Nonce :: binary()) -> ok.
+-spec xsalsa20_derive(salsa20_ctx(), Nonce :: <<_:192>>) -> ok.
 xsalsa20_derive(_Ctx, _Nonce) ->
     erlang:nif_error({nif_not_loaded, module, ?MODULE, line, ?LINE}).
 
@@ -31,7 +31,7 @@ xsalsa20_generate(_Ctx, _Bytes) ->
 xsalsa20_combine(_Ctx, _PT) ->
     erlang:nif_error({nif_not_loaded, module, ?MODULE, line, ?LINE}).
 
--spec poly1305_init(Key :: binary()) -> poly1305_ctx().
+-spec poly1305_init(Key :: <<_:256>>) -> poly1305_ctx().
 poly1305_init(_Key) ->
     erlang:nif_error({nif_not_loaded, module, ?MODULE, line, ?LINE}).
 
@@ -39,7 +39,7 @@ poly1305_init(_Key) ->
 poly1305_update(_Ctx, _Data) ->
     erlang:nif_error({nif_not_loaded, module, ?MODULE, line, ?LINE}).
 
--spec poly1305_finalize(poly1305_ctx()) -> Mac :: binary().
+-spec poly1305_finalize(poly1305_ctx()) -> Mac :: <<_:128>>.
 poly1305_finalize(_Ctx) ->
     erlang:nif_error({nif_not_loaded, module, ?MODULE, line, ?LINE}).
 

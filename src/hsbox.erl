@@ -4,17 +4,17 @@
 
 -export([poly1305_init/1, poly1305_update/2, poly1305_finalize/1]).
 
--export([sbEncrypt/3, sbDecrypt/3]).
+-export([cb_encrypt/3, cb_decrypt/3]).
 
 -type salsa20_ctx() :: hsbox_nif:salsa20_ctx().
 -type poly1305_ctx() :: hsbox_nif:poly1305_ctx().
--type key() :: binary().
--type nonce() :: binary().
+-type key() :: <<_:256>>.
+-type nonce() :: <<_:192>>.
 
 -export_type([salsa20_ctx/0, poly1305_ctx/0, key/0, nonce/0]).
 
 
--spec xsalsa20_init(8|12|20, key(), nonce()) -> salsa20_ctx().
+-spec xsalsa20_init(8 | 12 | 20, key(), nonce()) -> salsa20_ctx().
 xsalsa20_init(Rounds, Key, Nonce)
   when is_binary(Key), byte_size(Key) == 32,
        is_binary(Nonce), byte_size(Nonce) == 24,
@@ -49,14 +49,14 @@ poly1305_update(Ctx, Data) when is_reference(Ctx), is_binary(Data) ->
     hsbox_nif:poly1305_update(Ctx, Data).
 
 
--spec poly1305_finalize(poly1305_ctx()) -> MAC :: binary().
+-spec poly1305_finalize(poly1305_ctx()) -> MAC :: <<_:128>>.
 poly1305_finalize(Ctx) when is_reference(Ctx) ->
     hsbox_nif:poly1305_finalize(Ctx).
 
 
--spec sbDecrypt(key(), nonce(), CT :: binary()) ->
+-spec cb_decrypt(key(), nonce(), CT :: binary()) ->
 	  {ok, PT :: binary()} | {error, _}.
-sbDecrypt(Secret, Nonce, <<Tag:16/binary, CT/binary>>) ->
+cb_decrypt(Secret, Nonce, <<Tag:16/binary, CT/binary>>) ->
     {Rs, PT} = xsalsa20(Secret, Nonce, CT),
     case poly1305_auth(Rs, CT) of
 	Tag -> {ok, PT};
@@ -64,8 +64,8 @@ sbDecrypt(Secret, Nonce, <<Tag:16/binary, CT/binary>>) ->
     end.
 
 
--spec sbEncrypt(key(), nonce(), PT :: binary()) -> CT :: binary().
-sbEncrypt(Secret, Nonce, PT) ->
+-spec cb_encrypt(key(), nonce(), PT :: binary()) -> CT :: binary().
+cb_encrypt(Secret, Nonce, PT) ->
     {Rs, CT} = xsalsa20(Secret, Nonce, PT),
     Tag = poly1305_auth(Rs, CT),
     <<Tag/binary, CT/binary>>.
@@ -76,7 +76,7 @@ xsalsa20(Secret, <<Iv0:8/binary, Iv1/binary>>, Msg) ->
     ok = xsalsa20_derive(Ctx, Iv1),
     Rs = xsalsa20_generate(Ctx, 32),
     {Rs, xsalsa20_combine(Ctx, Msg)}.
-    
+
 
 poly1305_auth(Key, Data) ->
     Ctx = poly1305_init(Key),

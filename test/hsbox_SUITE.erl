@@ -1,14 +1,12 @@
 -module(hsbox_SUITE).
 
--include_lib("common_test/include/ct.hrl").
-
 -export([init_per_suite/1, end_per_suite/1,
 	 init_per_testcase/2, end_per_testcase/2,
 	 all/0, suite/0,
-	 xsalsa20_kat/1, poly1305_kat/1, sb/1]).
+	 xsalsa20_kat/1, poly1305_kat/1, cb/1]).
 
 
-suite() -> [{timetrap,{seconds,30}}].
+suite() -> [{timetrap, {seconds, 30}}].
 
 
 init_per_suite(Config) -> Config.
@@ -23,7 +21,7 @@ init_per_testcase(_TestCase, Config) -> Config.
 end_per_testcase(_TestCase, _Config) -> ok.
 
 
-all() -> [xsalsa20_kat, poly1305_kat, sb].
+all() -> [xsalsa20_kat, poly1305_kat, cb].
 
 
 xsalsa20_kat(_Config) ->
@@ -62,12 +60,12 @@ poly1305_kat(_Config) ->
     ok.
 
 
-sb(_Config) ->
+cb(_Config) ->
     Key = crypto:strong_rand_bytes(32),
     Nonce = crypto:strong_rand_bytes(24),
     PT = crypto:strong_rand_bytes(1024),
 
-    CT = hsbox:sbEncrypt(Key, Nonce, PT),
-    {ok, PT} = hsbox:sbDecrypt(Key, Nonce, CT),
-    {error, auth_fail} = hsbox:sbDecrypt(Key, Nonce, <<0, CT/binary>>),
+    CT = hsbox:cb_encrypt(Key, Nonce, PT),
+    {ok, PT} = hsbox:cb_decrypt(Key, Nonce, CT),
+    {error, auth_fail} = hsbox:cb_decrypt(Key, Nonce, <<0, CT/binary>>),
     ok.
